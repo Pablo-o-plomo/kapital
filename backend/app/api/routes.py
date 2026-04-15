@@ -6,6 +6,7 @@ from app.models.entities import Restaurant
 from app.schemas.entities import RestaurantOut
 from app.seed import reset_and_seed_data
 from app.services.dashboard import get_kitchen, get_losses, get_prep, get_profitability, get_summary, get_suppliers
+from app.services.iiko import get_iiko_status
 
 router = APIRouter()
 
@@ -62,3 +63,8 @@ def dashboard_profitability(db: Session = Depends(get_db)):
 def reset_demo_data(db: Session = Depends(get_db)):
     reset_and_seed_data(db)
     return {"status": "ok", "message": "Demo data reset completed"}
+
+
+@router.get("/api/integrations/iiko/status")
+async def iiko_integration_status():
+    return await get_iiko_status()

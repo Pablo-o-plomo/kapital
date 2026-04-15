@@ -79,6 +79,8 @@
 - `NEXT_PUBLIC_API_URL`
 - `NEXT_PUBLIC_DEMO_LOGIN`
 - `NEXT_PUBLIC_DEMO_PASSWORD`
+- `IIKO_API_LOGIN`
+- `IIKO_BASE_URL`
 
 > Важно: в `docker-compose.yml` **не используется `env_file`**. Это сделано специально для Timeweb, где переменные задаются в интерфейсе App Platform.
 
@@ -126,3 +128,27 @@
 
 ## Устойчивость фронтенда
 Если backend временно недоступен или отвечает ошибкой, frontend больше не падает с server-side exception: страницы используют встроенные demo fallback-данные.
+
+
+## Интеграция с iikoCloud
+Поддержан статус интеграции с iiko:
+- `GET /api/integrations/iiko/status`
+
+Для работы задайте в Timeweb env:
+- `IIKO_API_LOGIN` — ваш API login iiko (добавляйте только в переменные среды Timeweb, не в код)
+- `IIKO_BASE_URL` — по умолчанию `https://api-ru.iiko.services`
+
+После деплоя можно проверить интеграцию запросом к endpoint `GET /api/integrations/iiko/status`.
+
+
+## Проверка iiko в UI
+На странице `/dashboard` выводится статус подключения iiko (подключено/не подключено и количество организаций).
+
+
+### Где вставлять API ключ (правильно)
+Ключ iiko нужно добавлять **в переменные окружения на сервере (Timeweb App Platform)**, а не в репозиторий и не в исходный код.
+
+1. Timeweb → ваше приложение → Environment Variables.
+2. Добавьте `IIKO_API_LOGIN=<ваш_ключ>` и при необходимости `IIKO_BASE_URL=https://api-ru.iiko.services`.
+3. Нажмите Deploy.
+4. Проверьте `GET /api/integrations/iiko/status` — должен вернуть `connected: true`.

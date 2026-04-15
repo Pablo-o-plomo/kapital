@@ -20,6 +20,8 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
       APP_ENV: ${APP_ENV:-production}
+      IIKO_API_LOGIN: ${IIKO_API_LOGIN:-}
+      IIKO_BASE_URL: ${IIKO_BASE_URL:-https://api-ru.iiko.services}
     ports:
       - "8000:8000"
     depends_on:

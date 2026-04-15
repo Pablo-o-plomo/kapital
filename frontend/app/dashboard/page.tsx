@@ -27,6 +27,8 @@ const profitabilityFallback = {
   ]
 }
 
+const iikoFallback = { connected: false, organizations_count: 0, error: 'IIKO_API_LOGIN is not configured' }
+
 const lossesFallback = {
   losses_by_category: [
     { category: 'порча', amount: 480000 },
@@ -37,10 +39,11 @@ const lossesFallback = {
 }
 
 export default async function DashboardPage() {
-  const [summary, profitability, losses] = await Promise.all([
+  const [summary, profitability, losses, iikoStatus] = await Promise.all([
     apiGet('/api/dashboard/summary', summaryFallback),
     apiGet('/api/dashboard/profitability', profitabilityFallback),
-    apiGet('/api/dashboard/losses', lossesFallback)
+    apiGet('/api/dashboard/losses', lossesFallback),
+    apiGet('/api/integrations/iiko/status', iikoFallback)
   ])
 
   const chartData = profitability.restaurant_profitability_table.map((r: any) => ({ name: r.city, revenue: r.monthly_revenue, profit: r.net_profit }))
@@ -49,6 +52,10 @@ export default async function DashboardPage() {
     <AppShell>
       <div className='mb-3 rounded-xl border border-amber-600/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-200'>
         Если backend временно недоступен, отображаются встроенные демо-данные.
+      </div>
+
+      <div className='mb-3 rounded-xl border border-cyan-600/30 bg-cyan-500/10 px-4 py-2 text-xs text-cyan-200'>
+        iiko статус: {iikoStatus.connected ? `подключено (${iikoStatus.organizations_count} орг.)` : `не подключено${iikoStatus.error ? ` — ${iikoStatus.error}` : ''}`}
       </div>
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
         <Card><p className='text-slate-400'>Выручка сети</p><p className='mt-2 text-2xl font-bold'>{summary.total_revenue.toLocaleString('ru-RU')} ₽</p><CircleDollarSign className='mt-2 text-blue-400' /></Card>
