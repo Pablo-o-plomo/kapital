@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -7,8 +8,20 @@ from app.schemas.entities import RestaurantOut
 from app.seed import reset_and_seed_data
 from app.services.dashboard import get_kitchen, get_losses, get_prep, get_profitability, get_summary, get_suppliers
 from app.services.iiko import get_iiko_status
+from app.services.auth import AuthError, login, verify_token
 
 router = APIRouter()
+
+
+class LoginIn(BaseModel):
+    email: str
+    password: str
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = 'bearer'
+
 
 
 @router.get("/health")
@@ -68,3 +81,24 @@ def reset_demo_data(db: Session = Depends(get_db)):
 @router.get("/api/integrations/iiko/status")
 async def iiko_integration_status():
     return await get_iiko_status()
+
+
+@router.post("/api/auth/login", response_model=TokenOut)
+def auth_login(payload: LoginIn):
+    try:
+        token = login(payload.email, payload.password)
+    except AuthError:
+        raise HTTPException(status_code=401, detail='Invalid credentials')
+    return TokenOut(access_token=token)
+
+
+@router.get("/api/auth/me")
+def auth_me(authorization: str | None = Header(default=None)):
+    if not authorization or not authorization.lower().startswith('bearer '):
+        raise HTTPException(status_code=401, detail='Missing bearer token')
+    token = authorization.split(' ', 1)[1]
+    try:
+        payload = verify_token(token)
+    except AuthError:
+        raise HTTPException(status_code=401, detail='Invalid token')
+    return {'email': payload.get('sub'), 'role': payload.get('role')}

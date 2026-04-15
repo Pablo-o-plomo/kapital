@@ -2,17 +2,18 @@ import { AppShell } from '@/components/app-shell'
 import { Card } from '@/components/ui/card'
 import { apiGet } from '@/lib/api'
 
-const fallback = {
-  prep_items: [
-    { id: 1, item_name: 'Соус демиглас', shelf_life_hours: 24, current_stock: 94, avg_sales_per_lifetime: 79, recommended_prep: 71, overproduction_risk: 72 },
-    { id: 2, item_name: 'Тесто для пиццы', shelf_life_hours: 18, current_stock: 140, avg_sales_per_lifetime: 112, recommended_prep: 100, overproduction_risk: 78 }
-  ]
-}
-
 export default async function PrepPage() {
-  const data = await apiGet<any>('/api/dashboard/prep', fallback)
+  let data: any = { prep_items: [] }
+  let apiError = ''
+  try {
+    data = await apiGet<any>('/api/dashboard/prep')
+  } catch {
+    apiError = 'Не удалось загрузить данные заготовок из backend API.'
+  }
+
   return (
     <AppShell>
+      {apiError ? <div className='mb-3 rounded-xl border border-red-600/30 bg-red-500/10 px-4 py-2 text-xs text-red-200'>{apiError}</div> : null}
       <Card>
         <h2 className='mb-4 text-lg font-semibold'>Заготовки и риск перепроизводства</h2>
         <div className='overflow-x-auto'>

@@ -55,6 +55,8 @@
 - `GET /api/dashboard/kitchen`
 - `GET /api/dashboard/profitability`
 - `POST /api/demo/reset-data`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
 
 ## Демо-данные
 При старте backend запускается `python -m app.seed` и наполняет БД реалистичными данными:
@@ -77,8 +79,9 @@
 - `BACKEND_CORS_ORIGINS`
 - `APP_ENV`
 - `NEXT_PUBLIC_API_URL`
-- `NEXT_PUBLIC_DEMO_LOGIN`
-- `NEXT_PUBLIC_DEMO_PASSWORD`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `JWT_SECRET`
 - `IIKO_API_LOGIN`
 - `IIKO_BASE_URL`
 
@@ -95,12 +98,6 @@
 > В `docker-compose.yml` сервисы идут в порядке: `frontend` → `backend` → `db`.
 
 
-## Демо-доступ (логин/пароль)
-- Логин: `demo@restaurant.ai`
-- Пароль: `OpsDirector2026!`
-
-Можно переопределить через переменные `NEXT_PUBLIC_DEMO_LOGIN` и `NEXT_PUBLIC_DEMO_PASSWORD` в Timeweb.
-
 ## Если была ошибка `.env not found`
 Если в логах Timeweb есть ошибка вида:
 `env file .../.env not found`
@@ -111,8 +108,8 @@
 2. Убедитесь, что все переменные добавлены.
 3. Запустите новый Deploy.
 
-## Ограничения демо-версии
-- Авторизация демонстрационная (`/login` без реальной проверки).
+## Текущие ограничения
+- Авторизация через backend (`POST /api/auth/login`) с логином/паролем из env-переменных.
 - Данные синтетические и перезаписываются reset-эндпоинтом.
 - Не реализованы RBAC, аудит действий, webhooks и интеграции с ERP/POS.
 
@@ -125,9 +122,6 @@
 
 Проект стартует в контейнерах на платформе автоматически.
 
-
-## Устойчивость фронтенда
-Если backend временно недоступен или отвечает ошибкой, frontend больше не падает с server-side exception: страницы используют встроенные demo fallback-данные.
 
 
 ## Интеграция с iikoCloud
@@ -152,3 +146,25 @@
 2. Добавьте `IIKO_API_LOGIN=<ваш_ключ>` и при необходимости `IIKO_BASE_URL=https://api-ru.iiko.services`.
 3. Нажмите Deploy.
 4. Проверьте `GET /api/integrations/iiko/status` — должен вернуть `connected: true`.
+
+
+### Проверка по официальной схеме Authorization (iiko)
+По инструкции iikoCloud сначала получается access token через `POST /api/1/access_token` с телом `{ "apiLogin": "..." }`, затем этот токен используется в запросах API.
+
+Пример проверки на сервере (через наш backend endpoint):
+```bash
+curl -X GET "https://<ваш-домен>/api/integrations/iiko/status"
+```
+
+Прямой пример получения токена из iiko (для диагностики):
+```bash
+curl -X POST "https://api-ru.iiko.services/api/1/access_token" \
+  -H "Content-Type: application/json" \
+  -d '{"apiLogin":"<IIKO_API_LOGIN>"}'
+```
+
+
+### Production-авторизация
+Логин выполняется через backend endpoint `POST /api/auth/login`.
+Учетные данные хранятся в серверных env: `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `JWT_SECRET`.
+Frontend не содержит хардкоженных логинов/паролей.

@@ -20,6 +20,9 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
       APP_ENV: ${APP_ENV:-production}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@kapital.director}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMeStrongPassword}
+      JWT_SECRET: ${JWT_SECRET:-change_this_secret}
       IIKO_API_LOGIN: ${IIKO_API_LOGIN:-}
       IIKO_BASE_URL: ${IIKO_BASE_URL:-https://api-ru.iiko.services}
     ports:

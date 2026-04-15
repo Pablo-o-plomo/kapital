@@ -19,14 +19,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    const isLoggedIn = document.cookie.includes('ops_demo_auth=1')
+    const isLoggedIn = document.cookie.includes('ops_token=')
     if (!isLoggedIn) {
       router.replace('/login')
     }
   }, [router])
 
   const handleLogout = () => {
-    document.cookie = 'ops_demo_auth=; Path=/; Max-Age=0; SameSite=Lax'
+    document.cookie = 'ops_token=; Path=/; Max-Age=0; SameSite=Lax'
     router.push('/login')
   }
 
@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className='min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100'>
       <div className='mx-auto flex max-w-[1400px] gap-4 p-4 md:p-6'>
         <aside className='hidden w-64 rounded-2xl border border-slate-800 bg-slate-900/80 p-5 lg:block'>
-          <h1 className='mb-6 text-lg font-bold text-blue-300'>Ops Director SaaS</h1>
+          <h1 className='mb-6 text-lg font-bold text-blue-300'>Kapital Ops Director</h1>
           <nav className='space-y-2'>
             {nav.map((item) => {
               const Icon = item.icon

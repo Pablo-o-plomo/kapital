@@ -2,16 +2,18 @@ import { AppShell } from '@/components/app-shell'
 import { Card } from '@/components/ui/card'
 import { apiGet } from '@/lib/api'
 
-const fallbackRestaurants = [
-  { id: 1, name: 'Москва / Авиапарк', city: 'Москва', format: 'Флагман', monthly_revenue: 14200000, avg_check: 1680, food_cost_percent: 31.5, labor_cost_percent: 27.8, write_offs: 420000, net_profit: 2960000, status: 'stable' },
-  { id: 2, name: 'Ростов-на-Дону', city: 'Ростов-на-Дону', format: 'Street Casual', monthly_revenue: 8600000, avg_check: 1180, food_cost_percent: 35.9, labor_cost_percent: 29.5, write_offs: 510000, net_profit: 980000, status: 'attention' },
-  { id: 3, name: 'Южно-Сахалинск', city: 'Южно-Сахалинск', format: 'Premium Seafood', monthly_revenue: 12300000, avg_check: 2140, food_cost_percent: 38.4, labor_cost_percent: 30.6, write_offs: 760000, net_profit: 1040000, status: 'critical' }
-]
-
 export default async function RestaurantsPage() {
-  const restaurants = await apiGet<any[]>('/api/restaurants', fallbackRestaurants)
+  let restaurants: any[] = []
+  let apiError = ''
+  try {
+    restaurants = await apiGet<any[]>('/api/restaurants')
+  } catch {
+    apiError = 'Не удалось загрузить рестораны из backend API.'
+  }
+
   return (
     <AppShell>
+      {apiError ? <div className='mb-3 rounded-xl border border-red-600/30 bg-red-500/10 px-4 py-2 text-xs text-red-200'>{apiError}</div> : null}
       <Card>
         <h2 className='mb-4 text-lg font-semibold'>Рестораны сети</h2>
         <div className='overflow-x-auto'>

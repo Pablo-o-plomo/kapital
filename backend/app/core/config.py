@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     app_env: str = "production"
     iiko_api_login: str = ""
     iiko_base_url: str = "https://api-ru.iiko.services"
+    admin_email: str = "admin@kapital.director"
+    admin_password: str = "ChangeMeStrongPassword"
+    jwt_secret: str = "change_this_secret"
 
 
 settings = Settings()

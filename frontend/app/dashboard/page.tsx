@@ -5,58 +5,36 @@ import { RevenueProfitChart, SimpleBars } from '@/components/charts'
 import { Card } from '@/components/ui/card'
 import { apiGet } from '@/lib/api'
 
-const summaryFallback = {
-  total_revenue: 55900000,
-  total_net_profit: 7860000,
-  total_write_offs: 2720000,
-  critical_alerts_count: 3
-}
-
-const profitabilityFallback = {
-  restaurant_profitability_table: [
-    { id: 1, city: 'Москва', name: 'Москва / Авиапарк', monthly_revenue: 14200000, net_profit: 2960000, margin_percent: 20.8 },
-    { id: 2, city: 'Ростов-на-Дону', name: 'Ростов-на-Дону', monthly_revenue: 8600000, net_profit: 980000, margin_percent: 11.4 },
-    { id: 3, city: 'Южно-Сахалинск', name: 'Южно-Сахалинск', monthly_revenue: 12300000, net_profit: 1040000, margin_percent: 8.5 },
-    { id: 4, city: 'Сочи', name: 'Сочи', monthly_revenue: 9700000, net_profit: 1670000, margin_percent: 17.2 },
-    { id: 5, city: 'Санкт-Петербург', name: 'Санкт-Петербург', monthly_revenue: 11100000, net_profit: 1210000, margin_percent: 10.9 }
-  ],
-  worst_performers: [
-    { id: 3, name: 'Южно-Сахалинск', margin_percent: 8.5 },
-    { id: 5, name: 'Санкт-Петербург', margin_percent: 10.9 },
-    { id: 2, name: 'Ростов-на-Дону', margin_percent: 11.4 }
-  ]
-}
-
-const iikoFallback = { connected: false, organizations_count: 0, error: 'IIKO_API_LOGIN is not configured' }
-
-const lossesFallback = {
-  losses_by_category: [
-    { category: 'порча', amount: 480000 },
-    { category: 'брак', amount: 360000 },
-    { category: 'персонал', amount: 520000 },
-    { category: 'комплименты', amount: 240000 }
-  ]
-}
-
 export default async function DashboardPage() {
-  const [summary, profitability, losses, iikoStatus] = await Promise.all([
-    apiGet('/api/dashboard/summary', summaryFallback),
-    apiGet('/api/dashboard/profitability', profitabilityFallback),
-    apiGet('/api/dashboard/losses', lossesFallback),
-    apiGet('/api/integrations/iiko/status', iikoFallback)
-  ])
+  let summary: any = { total_revenue: 0, total_net_profit: 0, total_write_offs: 0, critical_alerts_count: 0 }
+  let profitability: any = { restaurant_profitability_table: [], worst_performers: [] }
+  let losses: any = { losses_by_category: [] }
+  let iikoStatus: any = { connected: false, organizations_count: 0, error: '' }
+  let apiError = ''
+
+  try {
+    ;[summary, profitability, losses, iikoStatus] = await Promise.all([
+      apiGet('/api/dashboard/summary'),
+      apiGet('/api/dashboard/profitability'),
+      apiGet('/api/dashboard/losses'),
+      apiGet('/api/integrations/iiko/status'),
+    ])
+  } catch {
+    apiError = 'Backend API недоступен или не настроен. Проверьте сервис backend и переменные окружения.'
+  }
 
   const chartData = profitability.restaurant_profitability_table.map((r: any) => ({ name: r.city, revenue: r.monthly_revenue, profit: r.net_profit }))
 
   return (
     <AppShell>
-      <div className='mb-3 rounded-xl border border-amber-600/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-200'>
-        Если backend временно недоступен, отображаются встроенные демо-данные.
-      </div>
+      {apiError ? (
+        <div className='mb-3 rounded-xl border border-red-600/30 bg-red-500/10 px-4 py-2 text-xs text-red-200'>{apiError}</div>
+      ) : null}
 
       <div className='mb-3 rounded-xl border border-cyan-600/30 bg-cyan-500/10 px-4 py-2 text-xs text-cyan-200'>
         iiko статус: {iikoStatus.connected ? `подключено (${iikoStatus.organizations_count} орг.)` : `не подключено${iikoStatus.error ? ` — ${iikoStatus.error}` : ''}`}
       </div>
+
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
         <Card><p className='text-slate-400'>Выручка сети</p><p className='mt-2 text-2xl font-bold'>{summary.total_revenue.toLocaleString('ru-RU')} ₽</p><CircleDollarSign className='mt-2 text-blue-400' /></Card>
         <Card><p className='text-slate-400'>Чистая прибыль</p><p className='mt-2 text-2xl font-bold text-emerald-300'>{summary.total_net_profit.toLocaleString('ru-RU')} ₽</p><TrendingUp className='mt-2 text-emerald-400' /></Card>
@@ -79,8 +57,8 @@ export default async function DashboardPage() {
         <Card>
           <h2 className='mb-3 text-lg font-semibold'>Краткий список рисков</h2>
           <ul className='space-y-2 text-sm text-slate-300'>
-            <li>• Превышение food cost в Южно-Сахалинске.</li>
-            <li>• Перегруз станции экспедиции в 2 точках.</li>
+            <li>• Превышение food cost по точкам с отклонениями.</li>
+            <li>• Перегрузка кухонных станций в пиковые часы.</li>
             <li>• Рост закупочных цен у ключевых поставщиков.</li>
           </ul>
         </Card>
