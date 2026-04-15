@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { BarChart3, Building2, ChefHat, ClipboardList, Factory, LogOut, Truck } from 'lucide-react'
+import { BarChart3, Building2, ChefHat, ClipboardList, Factory, FlaskConical, LogOut, Truck } from 'lucide-react'
 
 const nav = [
   { href: '/dashboard', label: 'Дашборд', icon: BarChart3 },
@@ -11,7 +11,8 @@ const nav = [
   { href: '/suppliers', label: 'Поставщики', icon: Truck },
   { href: '/losses', label: 'Потери', icon: ClipboardList },
   { href: '/prep', label: 'Заготовки', icon: Factory },
-  { href: '/kitchen', label: 'Кухня', icon: ChefHat }
+  { href: '/kitchen', label: 'Кухня', icon: ChefHat },
+  { href: '/api-test', label: 'API тест', icon: FlaskConical }
 ]
 
 export function AppShell({ children }: { children: React.ReactNode }) {

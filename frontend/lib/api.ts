@@ -1,7 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000'
+import { fetchBackend } from './backend-target'
 
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, { cache: 'no-store' })
+  const { res } = await fetchBackend(path)
   if (!res.ok) {
     throw new Error(`API error ${res.status}`)
   }

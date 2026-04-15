@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:8000}
+      BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:8000}
+      APP_ENV: ${APP_ENV:-production}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@kapital.director}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMeStrongPassword}
     ports:
