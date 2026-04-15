@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { BarChart3, Building2, ChefHat, ClipboardList, Factory, LogOut, Truck } from 'lucide-react'
 
 const nav = [
@@ -15,6 +16,19 @@ const nav = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
+
+  useEffect(() => {
+    const isLoggedIn = document.cookie.includes('ops_demo_auth=1')
+    if (!isLoggedIn) {
+      router.replace('/login')
+    }
+  }, [router])
+
+  const handleLogout = () => {
+    document.cookie = 'ops_demo_auth=; Path=/; Max-Age=0; SameSite=Lax'
+    router.push('/login')
+  }
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100'>
@@ -33,9 +47,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               )
             })}
           </nav>
-          <Link href='/login' className='mt-10 flex items-center gap-2 rounded-xl px-3 py-2 text-slate-300 hover:bg-slate-800'>
+          <button
+            type='button'
+            onClick={handleLogout}
+            className='mt-10 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-slate-300 hover:bg-slate-800'
+          >
             <LogOut size={16} /> Выйти
-          </Link>
+          </button>
         </aside>
 
         <main className='flex-1'>

@@ -77,6 +77,8 @@
 - `BACKEND_CORS_ORIGINS`
 - `APP_ENV`
 - `NEXT_PUBLIC_API_URL`
+- `NEXT_PUBLIC_DEMO_LOGIN`
+- `NEXT_PUBLIC_DEMO_PASSWORD`
 
 > Важно: в `docker-compose.yml` **не используется `env_file`**. Это сделано специально для Timeweb, где переменные задаются в интерфейсе App Platform.
 
@@ -89,6 +91,13 @@
 6. Нажмите **Deploy**.
 
 > В `docker-compose.yml` сервисы идут в порядке: `frontend` → `backend` → `db`.
+
+
+## Демо-доступ (логин/пароль)
+- Логин: `demo@restaurant.ai`
+- Пароль: `OpsDirector2026!`
+
+Можно переопределить через переменные `NEXT_PUBLIC_DEMO_LOGIN` и `NEXT_PUBLIC_DEMO_PASSWORD` в Timeweb.
 
 ## Если была ошибка `.env not found`
 Если в логах Timeweb есть ошибка вида:
