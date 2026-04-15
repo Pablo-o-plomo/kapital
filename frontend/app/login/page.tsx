@@ -4,8 +4,6 @@ import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://backend:8000'
-
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -19,17 +17,16 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
 
-      if (!response.ok) {
-        throw new Error('Неверный логин или пароль')
-      }
-
       const payload = await response.json()
+      if (!response.ok) {
+        throw new Error(payload?.detail || 'Неверный логин или пароль')
+      }
       document.cookie = `ops_token=${payload.access_token}; Path=/; Max-Age=43200; SameSite=Lax`
       router.push('/dashboard')
     } catch (err) {

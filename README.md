@@ -68,6 +68,14 @@
 
 `POST /api/demo/reset-data` полностью пересоздает демо-данные.
 
+
+## Логин и пароль по умолчанию
+Если вы не меняли env-переменные в Timeweb:
+- Логин: `admin@kapital.director`
+- Пароль: `ChangeMeStrongPassword`
+
+Рекомендуется сразу заменить `ADMIN_PASSWORD` и `JWT_SECRET` в переменных окружения.
+
 ## Переменные окружения (Timeweb)
 Используйте значения из `.env.example`:
 - `POSTGRES_DB`
