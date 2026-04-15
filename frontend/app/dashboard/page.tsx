@@ -17,7 +17,7 @@ export default async function DashboardPage() {
       apiGet('/api/dashboard/summary'),
       apiGet('/api/dashboard/profitability'),
       apiGet('/api/dashboard/losses'),
-      apiGet('/api/integrations/iiko/status'),
+      apiGet('/api/integrations/iiko/check'),
     ])
   } catch {
     apiError = 'Backend API недоступен или не настроен. Проверьте сервис backend и переменные окружения.'

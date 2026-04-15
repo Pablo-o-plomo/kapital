@@ -1,4 +1,5 @@
 const candidates = [
+  process.env.BACKEND_PUBLIC_URL,
   process.env.BACKEND_INTERNAL_URL,
   process.env.NEXT_PUBLIC_API_URL,
   'http://backend:8000',

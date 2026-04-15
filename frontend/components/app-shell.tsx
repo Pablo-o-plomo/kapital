@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { BarChart3, Building2, ChefHat, ClipboardList, Factory, FlaskConical, LogOut, Truck } from 'lucide-react'
+import { BarChart3, Building2, ChefHat, ClipboardList, Factory, FlaskConical, LogOut, PlugZap, Truck } from 'lucide-react'
 
 const nav = [
   { href: '/dashboard', label: 'Дашборд', icon: BarChart3 },
@@ -12,6 +12,7 @@ const nav = [
   { href: '/losses', label: 'Потери', icon: ClipboardList },
   { href: '/prep', label: 'Заготовки', icon: Factory },
   { href: '/kitchen', label: 'Кухня', icon: ChefHat },
+  { href: '/iiko', label: 'iiko', icon: PlugZap },
   { href: '/api-test', label: 'API тест', icon: FlaskConical }
 ]
 
