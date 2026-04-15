@@ -3,8 +3,20 @@ import { Card } from '@/components/ui/card'
 import { SimpleBars } from '@/components/charts'
 import { apiGet } from '@/lib/api'
 
+const fallback = {
+  largest_price_changes: [
+    { supplier: 'OceanLine', price_change_percent: 18.4 },
+    { supplier: 'ProteinHub', price_change_percent: 12.2 },
+    { supplier: 'FreshNorth', price_change_percent: 9.6 }
+  ],
+  risky_suppliers: [
+    { supplier: 'OceanLine', product_name: 'Лосось охлажденный', price: 1480, market_avg_price: 1290 },
+    { supplier: 'ProteinHub', product_name: 'Говядина', price: 870, market_avg_price: 790 }
+  ]
+}
+
 export default async function SuppliersPage() {
-  const data = await apiGet<any>('/api/dashboard/suppliers')
+  const data = await apiGet<any>('/api/dashboard/suppliers', fallback)
   return (
     <AppShell>
       <div className='grid gap-4 lg:grid-cols-2'>

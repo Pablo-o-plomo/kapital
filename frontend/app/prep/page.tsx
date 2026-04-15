@@ -2,8 +2,15 @@ import { AppShell } from '@/components/app-shell'
 import { Card } from '@/components/ui/card'
 import { apiGet } from '@/lib/api'
 
+const fallback = {
+  prep_items: [
+    { id: 1, item_name: 'Соус демиглас', shelf_life_hours: 24, current_stock: 94, avg_sales_per_lifetime: 79, recommended_prep: 71, overproduction_risk: 72 },
+    { id: 2, item_name: 'Тесто для пиццы', shelf_life_hours: 18, current_stock: 140, avg_sales_per_lifetime: 112, recommended_prep: 100, overproduction_risk: 78 }
+  ]
+}
+
 export default async function PrepPage() {
-  const data = await apiGet<any>('/api/dashboard/prep')
+  const data = await apiGet<any>('/api/dashboard/prep', fallback)
   return (
     <AppShell>
       <Card>

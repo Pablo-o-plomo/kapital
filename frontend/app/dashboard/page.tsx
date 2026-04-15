@@ -5,17 +5,51 @@ import { RevenueProfitChart, SimpleBars } from '@/components/charts'
 import { Card } from '@/components/ui/card'
 import { apiGet } from '@/lib/api'
 
+const summaryFallback = {
+  total_revenue: 55900000,
+  total_net_profit: 7860000,
+  total_write_offs: 2720000,
+  critical_alerts_count: 3
+}
+
+const profitabilityFallback = {
+  restaurant_profitability_table: [
+    { id: 1, city: 'Москва', name: 'Москва / Авиапарк', monthly_revenue: 14200000, net_profit: 2960000, margin_percent: 20.8 },
+    { id: 2, city: 'Ростов-на-Дону', name: 'Ростов-на-Дону', monthly_revenue: 8600000, net_profit: 980000, margin_percent: 11.4 },
+    { id: 3, city: 'Южно-Сахалинск', name: 'Южно-Сахалинск', monthly_revenue: 12300000, net_profit: 1040000, margin_percent: 8.5 },
+    { id: 4, city: 'Сочи', name: 'Сочи', monthly_revenue: 9700000, net_profit: 1670000, margin_percent: 17.2 },
+    { id: 5, city: 'Санкт-Петербург', name: 'Санкт-Петербург', monthly_revenue: 11100000, net_profit: 1210000, margin_percent: 10.9 }
+  ],
+  worst_performers: [
+    { id: 3, name: 'Южно-Сахалинск', margin_percent: 8.5 },
+    { id: 5, name: 'Санкт-Петербург', margin_percent: 10.9 },
+    { id: 2, name: 'Ростов-на-Дону', margin_percent: 11.4 }
+  ]
+}
+
+const lossesFallback = {
+  losses_by_category: [
+    { category: 'порча', amount: 480000 },
+    { category: 'брак', amount: 360000 },
+    { category: 'персонал', amount: 520000 },
+    { category: 'комплименты', amount: 240000 }
+  ]
+}
+
 export default async function DashboardPage() {
   const [summary, profitability, losses] = await Promise.all([
-    apiGet<any>('/api/dashboard/summary'),
-    apiGet<any>('/api/dashboard/profitability'),
-    apiGet<any>('/api/dashboard/losses')
+    apiGet('/api/dashboard/summary', summaryFallback),
+    apiGet('/api/dashboard/profitability', profitabilityFallback),
+    apiGet('/api/dashboard/losses', lossesFallback)
   ])
 
   const chartData = profitability.restaurant_profitability_table.map((r: any) => ({ name: r.city, revenue: r.monthly_revenue, profit: r.net_profit }))
 
   return (
     <AppShell>
+      <div className='mb-3 rounded-xl border border-amber-600/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-200'>
+        Если backend временно недоступен, отображаются встроенные демо-данные.
+      </div>
       <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
         <Card><p className='text-slate-400'>Выручка сети</p><p className='mt-2 text-2xl font-bold'>{summary.total_revenue.toLocaleString('ru-RU')} ₽</p><CircleDollarSign className='mt-2 text-blue-400' /></Card>
         <Card><p className='text-slate-400'>Чистая прибыль</p><p className='mt-2 text-2xl font-bold text-emerald-300'>{summary.total_net_profit.toLocaleString('ru-RU')} ₽</p><TrendingUp className='mt-2 text-emerald-400' /></Card>
