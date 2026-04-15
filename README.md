@@ -176,3 +176,9 @@ curl -X POST "https://api-ru.iiko.services/api/1/access_token" \
 Логин выполняется через backend endpoint `POST /api/auth/login`.
 Учетные данные хранятся в серверных env: `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `JWT_SECRET`.
 Frontend не содержит хардкоженных логинов/паролей.
+
+
+### Если логин пишет "Unable to reach backend auth service"
+В проект добавлен fallback в Next API (`/api/auth/login`): если frontend не может достучаться до backend по внутреннему адресу, вход выполняется по `ADMIN_EMAIL`/`ADMIN_PASSWORD` на стороне frontend-сервера.
+
+Это позволяет зайти в интерфейс даже при сетевых ограничениях платформы.
