@@ -2,66 +2,38 @@
 
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import { apiFetch } from '@/lib/api'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('admin@example.com')
+  const [password, setPassword] = useState('password123')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
-    setLoading(true)
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault()
     setError('')
-
     try {
-      const response = await fetch('/api/auth/login', {
+      const res = await apiFetch<{ access_token: string }>('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
-
-      const payload = await response.json()
-      if (!response.ok) {
-        throw new Error(payload?.detail || 'Неверный логин или пароль')
-      }
-      document.cookie = `ops_token=${payload.access_token}; Path=/; Max-Age=43200; SameSite=Lax`
+      localStorage.setItem('token', res.access_token)
       router.push('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка входа')
-    } finally {
-      setLoading(false)
+      setError('Неверные учетные данные или backend недоступен')
     }
   }
 
   return (
-    <div className='flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#1e3a8a,#020617)] p-4'>
-      <div className='w-full max-w-md rounded-3xl border border-slate-700 bg-slate-900/90 p-8 shadow-2xl'>
-        <h1 className='text-2xl font-bold'>Kapital — Операционный директор</h1>
-        <p className='mb-6 mt-2 text-sm text-slate-400'>Рабочая авторизация через backend API</p>
-
-        <form onSubmit={handleSubmit} className='space-y-3'>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder='Ваш логин'
-            className='w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3'
-          />
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder='Ваш пароль'
-            type='password'
-            className='w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3'
-          />
-          {error ? <p className='text-sm text-red-300'>{error}</p> : null}
-          <Button type='submit' className='w-full py-3' disabled={loading}>
-            {loading ? 'Проверка...' : 'Войти в систему'}
-          </Button>
-        </form>
-      </div>
-    </div>
+    <main className='mx-auto mt-24 max-w-md card p-6'>
+      <h1 className='mb-4 text-2xl font-bold'>Вход в систему</h1>
+      <form onSubmit={onSubmit} className='space-y-3'>
+        <input className='w-full rounded bg-slate-800 p-2' value={email} onChange={(e) => setEmail(e.target.value)} placeholder='Email' />
+        <input className='w-full rounded bg-slate-800 p-2' type='password' value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Password' />
+        {error && <p className='text-sm text-red-400'>{error}</p>}
+        <button className='w-full rounded bg-emerald-600 p-2 font-medium'>Войти</button>
+      </form>
+    </main>
   )
 }

@@ -1,47 +1,39 @@
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+  db:
+    image: postgres:16-alpine
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:8000}
-      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-}
-      BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:8000}
-      APP_ENV: ${APP_ENV:-production}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@kapital.director}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMeStrongPassword}
+      POSTGRES_DB: ${POSTGRES_DB:-ops_director}
+      POSTGRES_USER: ${POSTGRES_USER:-ops_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ops_password}
     ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+      - '5432:5432'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      POSTGRES_HOST: ${POSTGRES_HOST:-db}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
-      APP_ENV: ${APP_ENV:-production}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@kapital.director}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-ChangeMeStrongPassword}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ops_user:ops_password@db:5432/ops_director}
+      APP_ENV: ${APP_ENV:-development}
       JWT_SECRET: ${JWT_SECRET:-change_this_secret}
-      IIKO_API_LOGIN: ${IIKO_API_LOGIN:-}
-      IIKO_BASE_URL: ${IIKO_BASE_URL:-https://api-ru.iiko.services}
-      IIKO_ORGANIZATION_ID: ${IIKO_ORGANIZATION_ID:-}
-      IIKO_TERMINAL_GROUP_ID: ${IIKO_TERMINAL_GROUP_ID:-}
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
     ports:
-      - "8000:8000"
+      - '8000:8000'
     depends_on:
       - db
 
-  db:
-    image: postgres:16-alpine
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     ports:
-      - "5432:5432"
+      - '3000:3000'
+    depends_on:
+      - backend
+
+volumes:
+  pg_data:
