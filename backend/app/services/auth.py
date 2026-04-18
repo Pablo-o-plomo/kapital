@@ -1,28 +1,39 @@
-from datetime import datetime, timedelta, timezone
+from __future__ import annotations
+
+import hashlib
+from datetime import UTC, datetime, timedelta
 
 import jwt
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.entities import User
 
 
-class AuthError(Exception):
-    pass
+def hash_password(raw: str) -> str:
+    return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def login(email: str, password: str) -> str:
-    if email.strip().lower() != settings.admin_email.lower() or password != settings.admin_password:
-        raise AuthError('Invalid credentials')
-
-    payload = {
-        'sub': email.strip().lower(),
-        'role': 'operations_director',
-        'exp': datetime.now(timezone.utc) + timedelta(hours=12),
-    }
-    return jwt.encode(payload, settings.jwt_secret, algorithm='HS256')
+def verify_password(raw: str, hashed: str) -> bool:
+    return hash_password(raw) == hashed
 
 
-def verify_token(token: str) -> dict:
+def create_access_token(user: User) -> str:
+    expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
+    payload = {'sub': str(user.id), 'email': user.email, 'role': user.role.value, 'exp': expire}
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def decode_token(token: str) -> dict:
     try:
-        return jwt.decode(token, settings.jwt_secret, algorithms=['HS256'])
+        return jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     except jwt.PyJWTError as exc:
-        raise AuthError('Invalid token') from exc
+        raise HTTPException(status_code=401, detail='Invalid token') from exc
+
+
+def login(db: Session, email: str, password: str) -> str:
+    user = db.query(User).filter(User.email == email).first()
+    if not user or not verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=401, detail='Invalid credentials')
+    return create_access_token(user)

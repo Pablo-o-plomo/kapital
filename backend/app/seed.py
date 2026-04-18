@@ -1,76 +1,115 @@
-from datetime import date
+from datetime import date, timedelta
+
 from sqlalchemy.orm import Session
 
 from app.db.base import Base
 from app.db.session import SessionLocal, engine
-from app.models.entities import InventoryLoss, KitchenPerformance, PrepProduction, Restaurant, Supplier, SupplierPrice
+from app.models.entities import (
+    Block,
+    Comment,
+    Company,
+    Issue,
+    IssueAnalysis,
+    IssueType,
+    Metric,
+    Period,
+    Product,
+    ProductPrice,
+    Restaurant,
+    RestaurantUser,
+    Severity,
+    Supplier,
+    Task,
+    User,
+    UserRole,
+)
+from app.services.auth import hash_password
+from app.services.rules import create_metric_issues, create_standard_blocks, create_supplier_price_issue
 
 
-RESTAURANTS = [
-    {"name": "Москва / Авиапарк", "city": "Москва", "format": "Флагман Food Hall", "seats": 180, "monthly_revenue": 14200000, "avg_check": 1680, "food_cost_percent": 31.5, "labor_cost_percent": 27.8, "write_offs": 420000, "net_profit": 2960000, "status": "stable"},
-    {"name": "Ростов-на-Дону", "city": "Ростов-на-Дону", "format": "Street Casual", "seats": 120, "monthly_revenue": 8600000, "avg_check": 1180, "food_cost_percent": 35.9, "labor_cost_percent": 29.5, "write_offs": 510000, "net_profit": 980000, "status": "attention"},
-    {"name": "Южно-Сахалинск", "city": "Южно-Сахалинск", "format": "Premium Seafood", "seats": 90, "monthly_revenue": 12300000, "avg_check": 2140, "food_cost_percent": 38.4, "labor_cost_percent": 30.6, "write_offs": 760000, "net_profit": 1040000, "status": "critical"},
-    {"name": "Сочи", "city": "Сочи", "format": "Resort Family", "seats": 150, "monthly_revenue": 9700000, "avg_check": 1430, "food_cost_percent": 33.2, "labor_cost_percent": 28.6, "write_offs": 390000, "net_profit": 1670000, "status": "stable"},
-    {"name": "Санкт-Петербург", "city": "Санкт-Петербург", "format": "Urban Bistro", "seats": 130, "monthly_revenue": 11100000, "avg_check": 1520, "food_cost_percent": 34.7, "labor_cost_percent": 31.2, "write_offs": 640000, "net_profit": 1210000, "status": "attention"},
-]
+def seed(db: Session) -> None:
+    if db.query(User).count() > 0:
+        return
 
+    users = [
+        User(full_name='Admin User', email='admin@example.com', hashed_password=hash_password('password123'), role=UserRole.admin),
+        User(full_name='Owner User', email='owner@example.com', hashed_password=hash_password('password123'), role=UserRole.owner),
+        User(full_name='Accountant User', email='accountant@example.com', hashed_password=hash_password('password123'), role=UserRole.accountant),
+        User(full_name='Manager User', email='manager@example.com', hashed_password=hash_password('password123'), role=UserRole.manager),
+        User(full_name='Chef User', email='chef@example.com', hashed_password=hash_password('password123'), role=UserRole.chef),
+    ]
+    db.add_all(users)
+    db.flush()
 
-SUPPLIERS = [
-    {"name": "FreshNorth", "category": "Овощи и зелень", "contact_name": "Ирина Павлова", "phone": "+7 900 100 11 22", "email": "irina@freshnorth.ru", "is_active": True},
-    {"name": "ProteinHub", "category": "Мясо и птица", "contact_name": "Антон Лебедев", "phone": "+7 900 200 22 33", "email": "anton@proteinhub.ru", "is_active": True},
-    {"name": "OceanLine", "category": "Рыба и морепродукты", "contact_name": "Марина Седова", "phone": "+7 900 300 33 44", "email": "marina@oceanline.ru", "is_active": True},
-    {"name": "DairyPro", "category": "Молочная продукция", "contact_name": "Сергей Никитин", "phone": "+7 900 400 44 55", "email": "sergey@dairypro.ru", "is_active": True},
-    {"name": "BakeryOne", "category": "Хлеб и выпечка", "contact_name": "Ольга Бондарь", "phone": "+7 900 500 55 66", "email": "olga@bakeryone.ru", "is_active": True},
-]
+    company = Company(name='KLEVO Group')
+    db.add(company)
+    db.flush()
 
+    restaurants = [
+        Restaurant(name='Клёво Ростов', company_id=company.id),
+        Restaurant(name='Клёво Сочи', company_id=company.id),
+        Restaurant(name='Клёво Авиапарк', company_id=company.id),
+    ]
+    db.add_all(restaurants)
+    db.flush()
 
-def reset_and_seed_data(db: Session):
-    for model in [SupplierPrice, InventoryLoss, PrepProduction, KitchenPerformance, Supplier, Restaurant]:
-        db.query(model).delete()
+    for user in users[1:]:
+        for restaurant in restaurants:
+            db.add(RestaurantUser(user_id=user.id, restaurant_id=restaurant.id))
 
-    restaurants = [Restaurant(**item) for item in RESTAURANTS]
-    suppliers = [Supplier(**item) for item in SUPPLIERS]
-    db.add_all(restaurants + suppliers)
+    products = [
+        Product(name='Лосось', category='рыба', unit='кг'),
+        Product(name='Тунец', category='рыба', unit='кг'),
+        Product(name='Креветка', category='морепродукты', unit='кг'),
+        Product(name='Томаты', category='овощи', unit='кг'),
+        Product(name='Авокадо', category='овощи', unit='кг'),
+    ]
+    suppliers = [Supplier(name='FishPro'), Supplier(name='AgroTrade'), Supplier(name='PrimeFood')]
+    db.add_all(products + suppliers)
     db.flush()
 
     today = date.today()
-    losses_categories = ["порча", "брак", "персонал", "комплименты", "инвентаризация минус", "инвентаризация плюс"]
-    products = ["Лосось охлажденный", "Куриное филе", "Томаты", "Моцарелла", "Хлеб ремесленный"]
-    stations = ["Гриль", "Холодный цех", "Пицца", "Горячий цех", "Экспедиция"]
+    for idx, restaurant in enumerate(restaurants):
+        start = today - timedelta(days=today.weekday() + 7)
+        period_prev = Period(restaurant_id=restaurant.id, start_date=start - timedelta(days=7), end_date=start - timedelta(days=1), status='closed')
+        period_cur = Period(restaurant_id=restaurant.id, start_date=start, end_date=start + timedelta(days=6), status='issues')
+        db.add_all([period_prev, period_cur])
+        db.flush()
+        create_standard_blocks(db, period_prev.id)
+        create_standard_blocks(db, period_cur.id)
 
-    for r in restaurants:
-        for idx, category in enumerate(losses_categories):
-            amount = (idx + 1) * 15000 + (r.id * 7000)
-            db.add(InventoryLoss(restaurant_id=r.id, category=category, amount=amount, date=today, comment=f"{category} — контрольная запись"))
+        prev_metric = Metric(period_id=period_prev.id, revenue=2_000_000, avg_check=1700, guest_count=1150, food_cost_percent=24, fot_percent=12, write_offs_value=70000, negative_stock_value=0)
+        cur_metric = Metric(period_id=period_cur.id, revenue=1_700_000 - idx * 50000, avg_check=1500, guest_count=1000, food_cost_percent=27, fot_percent=14, write_offs_value=120000, negative_stock_value=5000)
+        db.add_all([prev_metric, cur_metric])
+        db.flush()
+        create_metric_issues(db, cur_metric)
 
-        for i, item in enumerate(["Соус демиглас", "Бульон куриный", "Салат микс", "Тесто для пиццы", "Крем-суп основа"]):
-            avg_sales = 80 + i * 12 + r.id * 3
-            stock = avg_sales + (15 if r.status != "stable" else 4)
-            risk = min(95, round((stock / max(avg_sales, 1)) * 55, 1))
-            db.add(PrepProduction(restaurant_id=r.id, item_name=item, shelf_life_hours=24 + i * 8, current_stock=stock, avg_sales_per_lifetime=avg_sales, recommended_prep=round(avg_sales * 0.9, 1), overproduction_risk=risk, date=today))
+        blocks = db.query(Block).filter(Block.period_id == period_cur.id).all()
+        revenue_block = next(b for b in blocks if b.code == 'revenue_check')
+        issue = Issue(period_id=period_cur.id, block_id=revenue_block.id, type=IssueType.revenue, title='Падение выручки', description='Нужно проверить маркетинг', severity=Severity.yellow)
+        db.add(issue)
+        db.flush()
+        analysis = IssueAnalysis(issue_id=issue.id, reason='Сезонный спад', solution='Запустить акцию', result='', assigned_user_id=users[3].id)
+        task = Task(block_id=revenue_block.id, title='Подготовить план акций', description='Согласовать с собственником', assigned_user_id=users[3].id)
+        comment = Comment(issue_id=issue.id, user_id=users[2].id, text='Подтверждаю снижение по отчетам')
+        db.add_all([analysis, task, comment])
 
-        for i, station in enumerate(stations):
-            base_time = 9 + i * 1.4 + (2.5 if r.status == "critical" else 0)
-            load = 62 + i * 6 + (10 if r.status != "stable" else 0)
-            errors = 2 + i + (3 if load > 85 else 0)
-            db.add(KitchenPerformance(restaurant_id=r.id, station_name=station, avg_cook_time=round(base_time, 1), orders_count=220 + i * 40, errors_count=errors, load_percent=min(99, load), date=today))
-
-    for s in suppliers:
-        for idx, r in enumerate(restaurants):
-            price = 100 + (s.id * 16) + (idx * 8)
-            previous = round(price * 0.9, 2)
-            change = round((price - previous) / previous * 100, 2)
-            market = round(price * (0.92 if idx % 2 == 0 else 1.03), 2)
-            db.add(SupplierPrice(supplier_id=s.id, restaurant_id=r.id, product_name=products[(s.id + idx) % len(products)], unit="кг", price=round(price, 2), previous_price=previous, price_change_percent=change, market_avg_price=market, is_above_market=price > market, date=today))
-
+    db.flush()
+    prices = [
+        ProductPrice(product_id=products[0].id, supplier_id=suppliers[0].id, restaurant_id=restaurants[0].id, price=1000, price_date=today - timedelta(days=7), created_by_user_id=users[2].id),
+        ProductPrice(product_id=products[0].id, supplier_id=suppliers[0].id, restaurant_id=restaurants[0].id, price=1130, price_date=today, created_by_user_id=users[2].id),
+    ]
+    db.add_all(prices)
+    db.flush()
+    create_supplier_price_issue(db, prices[1])
     db.commit()
 
 
-def main():
+def main() -> None:
     Base.metadata.create_all(bind=engine)
-    with SessionLocal() as session:
-        reset_and_seed_data(session)
+    with SessionLocal() as db:
+        seed(db)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
