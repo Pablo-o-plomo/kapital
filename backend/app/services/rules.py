@@ -89,10 +89,10 @@ def create_metric_issues(db: Session, metric: Metric) -> None:
     if not prev_metric:
         return
 
-    if float(prev_metric.avg_check) > 0 and metric.avg_check < float(prev_metric.avg_check) * 0.9:
-        _ensure_issue(db, metric.period_id, IssueType.avg_check, 'Средний чек заметно снизился', 'Падение >10% к прошлой неделе.', Severity.yellow)
-    if float(prev_metric.revenue) > 0 and metric.revenue < float(prev_metric.revenue) * 0.9:
-        _ensure_issue(db, metric.period_id, IssueType.revenue, 'Выручка заметно снизилась', 'Падение >10% к прошлой неделе.', Severity.yellow)
+    if float(prev_metric.avg_check) > 0 and float(metric.avg_check) < float(prev_metric.avg_check):
+        _ensure_issue(db, metric.period_id, IssueType.avg_check, 'Средний чек снизился', 'Снижение относительно прошлой недели.', Severity.yellow)
+    if float(prev_metric.revenue) > 0 and float(metric.revenue) < float(prev_metric.revenue):
+        _ensure_issue(db, metric.period_id, IssueType.revenue, 'Выручка снизилась', 'Снижение относительно прошлой недели.', Severity.yellow)
 
 
 def create_supplier_price_issue(db: Session, price_row: ProductPrice) -> None:
