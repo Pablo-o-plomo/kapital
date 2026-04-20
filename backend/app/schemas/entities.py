@@ -223,11 +223,16 @@ class MetricOut(BaseModel):
     revenue: float
     avg_check: float
     guest_count: int
+    food_cost_value: float
     food_cost_percent: float
+    fot_value: float
     fot_percent: float
     write_offs_value: float
+    inventory_diff_value: float
     negative_stock_value: float
     comments: str
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
