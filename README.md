@@ -7,7 +7,7 @@
 - Frontend: Next.js 14+, TypeScript, App Router, Tailwind CSS.
 - Backend: FastAPI, SQLAlchemy, Pydantic, Alembic, Uvicorn.
 - DB: PostgreSQL.
-- Infra: Docker/Docker Compose, готово к Timeweb App Platform.
+- Infra: Docker/Docker Compose + Railway deploy config.
 
 ## Структура файлов
 ```text
@@ -114,39 +114,31 @@ BACKEND_CORS_ORIGINS=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-## Deploy to Timeweb App Platform
+## Deploy to Railway
 
-### Вариант A: единый деплой через Docker Compose
-1. Запушить репозиторий в GitHub.
-2. В Timeweb создать сервис из репозитория (Docker Compose).
-3. Указать `docker-compose.yml`.
-4. Добавить переменные окружения из `.env.example`.
-5. Задеплоить.
-
-### Вариант B: раздельный деплой (рекомендуется для production)
-
-#### Backend на Timeweb
-1. Создать приложение с Dockerfile из `backend/Dockerfile`.
-2. Прописать env:
+### 1) Backend service
+1. Создать сервис в Railway, выбрать репозиторий и Root Directory = `backend`.
+2. Railway автоматически подхватит `backend/railway.json` и `backend/Dockerfile`.
+3. Добавить env:
    - `DATABASE_URL`
    - `JWT_SECRET`
-   - `BACKEND_CORS_ORIGINS` (домен frontend)
-3. Команда запуска уже заложена в Dockerfile (`uvicorn app.main:app ...`).
-4. После первого запуска применить миграции (`alembic upgrade head`) и seed.
+   - `BACKEND_CORS_ORIGINS=https://<frontend-domain>`
+   - `RUN_SEED=false` (или `true` только для первичного наполнения)
+4. Railway сам подставляет `PORT`, Dockerfile это учитывает.
 
-#### Frontend на Timeweb
-1. Создать приложение с Dockerfile из `frontend/Dockerfile`.
-2. Прописать env:
+### 2) Frontend service
+1. Создать второй сервис в Railway с Root Directory = `frontend`.
+2. Railway использует `frontend/railway.json` и `frontend/Dockerfile`.
+3. Добавить env:
    - `NEXT_PUBLIC_API_URL=https://<backend-domain>`
-3. Задеплоить и проверить `/login`, `/dashboard`.
+4. Проверить `/login` и `/dashboard`.
 
-### PostgreSQL на Timeweb
-1. Создать managed PostgreSQL в панели Timeweb.
-2. Получить host/port/db/user/password.
-3. Сформировать `DATABASE_URL` в формате:
-   `postgresql+psycopg://USER:PASSWORD@HOST:PORT/DBNAME`
-4. Установить этот `DATABASE_URL` в backend-приложении.
-5. Выполнить миграции и seed.
+### 3) PostgreSQL в Railway
+1. В проекте Railway нажать **New → Database → PostgreSQL**.
+2. Скопировать `DATABASE_URL` из переменных БД.
+3. Прописать этот `DATABASE_URL` в backend service.
+4. На первом запуске backend автоматически применит миграции (`alembic upgrade head`).
+5. Для тестовых данных временно выставить `RUN_SEED=true`, затем вернуть `false`.
 
 ## Основные API
 - Auth: `POST /auth/register`, `POST /auth/login`, `GET /auth/me`
