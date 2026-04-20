@@ -41,6 +41,8 @@
 │   └── .env.example
 ├── docker-compose.yml
 ├── .env.example
+├── build.sh
+├── start.sh
 └── README.md
 ```
 
@@ -132,6 +134,23 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 3. Добавить env:
    - `NEXT_PUBLIC_API_URL=https://<backend-domain>`
 4. Проверить `/login` и `/dashboard`.
+
+
+### Deploy через Railpack (когда платформа не использует Dockerfile)
+Если платформа пишет ошибку вида `start.sh not found` / `Railpack failed to detect app`,
+используйте корневые скрипты `build.sh` и `start.sh` (они добавлены в проект).
+
+1. Deploy из корня репозитория.
+2. Добавьте env `APP_TARGET=backend` (или `frontend`).
+3. Для backend также задайте:
+   - `DATABASE_URL`
+   - `JWT_SECRET`
+   - `BACKEND_CORS_ORIGINS`
+   - `RUN_SEED=false`
+4. Для frontend задайте:
+   - `NEXT_PUBLIC_API_URL=https://<backend-domain>`
+
+Скрипты автоматически учитывают `PORT`.
 
 ### 3) PostgreSQL в Railway
 1. В проекте Railway нажать **New → Database → PostgreSQL**.
