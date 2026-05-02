@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router
+from app.api.iiko_routes import router as iiko_router
 from app.core.config import settings
 
 app = FastAPI(title=settings.app_name, version='1.0.0')
@@ -15,3 +16,4 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(iiko_router)
